@@ -1,0 +1,62 @@
+{
+	"name": "chunkify",
+	"version": "5.0.0",
+	"description": "Split an iterable into evenly sized chunks",
+	"license": "MIT",
+	"repository": "sindresorhus/chunkify",
+	"funding": "https://github.com/sponsors/sindresorhus",
+	"author": {
+		"name": "Sindre Sorhus",
+		"email": "sindresorhus@gmail.com",
+		"url": "https://sindresorhus.com"
+	},
+	"type": "module",
+	"exports": {
+		"types": "./index.d.ts",
+		"default": "./index.js"
+	},
+	"sideEffects": false,
+	"engines": {
+		"node": ">=18"
+	},
+	"scripts": {
+		"test": "xo && ava && tsd"
+	},
+	"files": [
+		"index.js",
+		"index.d.ts"
+	],
+	"keywords": [
+		"chunkify",
+		"chunk",
+		"chunks",
+		"chunked",
+		"chunking",
+		"array",
+		"iterable",
+		"iterator",
+		"generator",
+		"set",
+		"map",
+		"parts",
+		"split",
+		"size",
+		"partition",
+		"divide",
+		"segment",
+		"batch",
+		"slice",
+		"subarray",
+		"group",
+		"allocate",
+		"dissect",
+		"segregate",
+		"separate",
+		"section"
+	],
+	"devDependencies": {
+		"ava": "^6.0.1",
+		"tsd": "^0.30.1",
+		"xo": "^0.56.0"
+	}
+}

@@ -1,0 +1,21 @@
+{
+  "bmw|101": {
+    "id": 101,
+    "catalogName": "BMW",
+    "status": "resolved",
+    "cachedAt": 1782666432741
+  },
+  "bmw|102": {
+    "id": null,
+    "catalogName": null,
+    "status": "not_found",
+    "candidates": [],
+    "cachedAt": 1782666433884
+  },
+  "bmw|123": {
+    "id": 12345,
+    "catalogName": "BMW",
+    "status": "resolved",
+    "cachedAt": 1782666475841
+  }
+}

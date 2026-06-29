@@ -1,0 +1,29 @@
+{
+  "createdAt": "2026-06-29T18:59:24.953Z",
+  "sampleSize": 1,
+  "compatible": false,
+  "rows": [
+    {
+      "article": "11127548797",
+      "brand": "BMW",
+      "logged": {
+        "id": 12345,
+        "summary": {
+          "ok": true,
+          "count": 1,
+          "minPrice": 100,
+          "sellers": []
+        }
+      },
+      "guest": {
+        "id": 12345,
+        "summary": {
+          "ok": true,
+          "count": 1,
+          "minPrice": 200,
+          "sellers": []
+        }
+      }
+    }
+  ]
+}
