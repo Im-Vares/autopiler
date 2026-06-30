@@ -389,7 +389,7 @@ function printProductionDiagnostics(diagnostics) {
   console.log(`Estimated catalog prefetch: ${diagnostics.catalogPrefetchPhase.estimatedDuration} for ${diagnostics.catalogPrefetchPhase.estimatedRequests} request(s)`);
   console.log(`Estimated logged price phase: ${diagnostics.pricePhase.estimatedDuration} for ${diagnostics.pricePhase.estimatedPriceRequests} request(s)`);
   console.log(`Estimated total runtime: ${diagnostics.totalRuntime.estimatedDuration}`);
-  console.log(`3h target fit: ${diagnostics.totalRuntime.estimatedFitsTarget ? 'YES' : 'NO'}; required accounts estimate: ${diagnostics.pricePhase.requiredAccountsForTarget}`);
+  console.log(`Target ${diagnostics.totalRuntime.targetDuration} fit: ${diagnostics.totalRuntime.estimatedFitsTarget ? 'YES' : 'NO'}; required accounts estimate: ${diagnostics.pricePhase.requiredAccountsForTarget}`);
   if (diagnostics.warnings.length > 0) {
     console.log(`Warnings:`);
     for (const warning of diagnostics.warnings) {
