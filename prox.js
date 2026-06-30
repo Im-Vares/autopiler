@@ -217,6 +217,9 @@ function normalizeAuthMode(mode) {
 
 function normalizeScrapeProfile(profile) {
     const normalized = String(profile || 'fast').trim().toLowerCase();
+    if (normalized === 'quick' || normalized === 'balanced') {
+        return 'quick';
+    }
     if (normalized === 'safe' || normalized === 'fast' || normalized === 'turbo') {
         return normalized;
     }
@@ -243,6 +246,27 @@ function getScrapeProfileConfig(profile) {
             searchDelayMaxMs: 3600,
             appraiseDelayMinMs: 2600,
             appraiseDelayMaxMs: 5200,
+            startupJitterMs: 3000
+        };
+    }
+    if (normalized === 'quick') {
+        return {
+            activePerAccountSafe: 4,
+            activePerAccountHard: 5,
+            accountRequestConcurrency: 2,
+            parserConcurrencyPerAccount: 4,
+            parserConcurrencyMax: 8,
+            proxyCooldownMinMs: 3000,
+            proxyCooldownMaxMs: 6000,
+            accountIntervalMinMs: 4200,
+            accountIntervalMaxMs: 6500,
+            guestRequestConcurrency: 4,
+            guestIntervalMinMs: 450,
+            guestIntervalMaxMs: 900,
+            searchDelayMinMs: 300,
+            searchDelayMaxMs: 900,
+            appraiseDelayMinMs: 500,
+            appraiseDelayMaxMs: 1200,
             startupJitterMs: 3000
         };
     }

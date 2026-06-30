@@ -756,7 +756,7 @@ async function get(url, forceProxy = null, referer = 'https://autopiter.ru/') {
         const cookie = isGuestMode() ? getProxyGuestCookie(proxy) : getProxyCookie(proxy);
         if (!isGuestMode() && (!cookie || !cookie.includes('sessionId='))) {
           outcome = 'auth_issue';
-          markProxyBad(proxy, 'auth_issue');
+          if (!lease) markProxyBad(proxy, 'auth_issue');
           wrapper.rp = null;
           continue;
         }
@@ -794,6 +794,11 @@ async function get(url, forceProxy = null, referer = 'https://autopiter.ru/') {
       }
 
       releaseRequestSlot = await acquireRequestSlot(proxy);
+      const requestKind = url.includes('/api/api/appraise') ? 'appraise' : (url.includes('/api/api/searchdetails') ? 'search' : 'request');
+      const requestDelayMs = getAdaptiveDelay(requestKind, 0, 0);
+      if (requestDelayMs > 0) {
+        await tim(requestDelayMs);
+      }
       const res = await axios.get(url, axiosOptions);
       const contentType = String(res.headers['content-type'] || '');
       const responseText = typeof res.data === 'string' ? res.data.toLowerCase() : '';
@@ -832,11 +837,11 @@ async function get(url, forceProxy = null, referer = 'https://autopiter.ru/') {
       return res;
     } catch (error) {
       const status = error.response && error.response.status;
-      const label = proxy ? `${proxy.host}:${proxy.port}` : 'direct';
+      const label = proxy ? `${proxy.host}:${proxy.port}` : (error.code === 'PROXY_LEASE_TIMEOUT' ? 'proxy-pool' : 'direct');
       console.log(`[get] Attempt ${attempt}/${maxRetries} failed via ${label}: ${error.message}`);
       if (proxy && (status === 429 || status === 403)) {
         outcome = 'rate_limited';
-        markProxyBad(proxy, 'rate_limited');
+        if (!lease) markProxyBad(proxy, 'rate_limited');
         wrapper.rp = null;
         const retryAfter = String(error.response?.headers?.['retry-after'] || '');
         const seconds = Number(retryAfter);
@@ -847,12 +852,12 @@ async function get(url, forceProxy = null, referer = 'https://autopiter.ru/') {
       } else if (proxy && (status === 401 || error.code === 'AUTOPITER_SESSION_EXPIRED' || error.code === 'AUTOPITER_CHALLENGE')) {
         outcome = 'auth_issue';
         if (!isGuestMode()) setProxyCookie(proxy, null);
-        markProxyBad(proxy, error.code === 'AUTOPITER_CHALLENGE' ? 'challenge' : 'auth_issue');
+        if (!lease) markProxyBad(proxy, error.code === 'AUTOPITER_CHALLENGE' ? 'challenge' : 'auth_issue');
         wrapper.rp = null;
       } else if (proxy) {
         outcome = 'network';
         options = { attempt };
-        markProxyBad(proxy, 'network');
+        if (!lease) markProxyBad(proxy, 'network');
         wrapper.rp = null;
       } else if (!canUseDirectFallback() && !forcedDirect) {
         wrapper.rp = null;
