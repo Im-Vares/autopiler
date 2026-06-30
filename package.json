@@ -4,7 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --test tests/e2e.test.js"
+    "test": "node --test tests/e2e.test.js",
+    "catalog-cache": "PROXY_SOURCE=api AUTH_MODE=guest node index.js --catalog-cache",
+    "catalog-cache:refresh": "PROXY_SOURCE=api AUTH_MODE=guest CATALOG_CACHE_REFRESH=1 node index.js --catalog-cache",
+    "diagnostics": "PROXY_SOURCE=api AUTH_MODE=logged VALIDATE_CACHED_SESSIONS=1 node index.js --diagnostics",
+    "diagnostics:turbo": "TARGET_RUN_HOURS=5 SCRAPE_PROFILE=turbo PROXY_SOURCE=api AUTH_MODE=logged VALIDATE_CACHED_SESSIONS=1 node index.js --diagnostics",
+    "parse": "PROXY_SOURCE=api AUTH_MODE=logged VALIDATE_CACHED_SESSIONS=1 node index.js --direct",
+    "parse:turbo": "TARGET_RUN_HOURS=5 SCRAPE_PROFILE=turbo PROXY_SOURCE=api AUTH_MODE=logged VALIDATE_CACHED_SESSIONS=1 node index.js --direct",
+    "parse:turbo:fresh": "TARGET_RUN_HOURS=5 SCRAPE_PROFILE=turbo PROXY_SOURCE=api AUTH_MODE=logged VALIDATE_CACHED_SESSIONS=1 RESUME_CHECKPOINT=0 node index.js --direct"
   },
   "author": "",
   "license": "ISC",
