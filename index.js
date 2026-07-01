@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const port = 8081;
+const port = Number.parseInt(process.env.PORT || process.env.APP_PORT || '18081', 10) || 18081;
 const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
@@ -751,6 +751,13 @@ async function start() {
       }
     }
 
+    const remainingLimit = parseInt(process.env.SCRAPE_REMAINING_LIMIT || process.env.SCRAPE_BATCH_SIZE || '0', 10);
+    if (remainingLimit > 0 && dets.length > remainingLimit) {
+      const beforeRemainingLimit = dets.length;
+      dets = dets.slice(0, remainingLimit);
+      console.log(`[Scraper] SCRAPE_REMAINING_LIMIT=${remainingLimit}; processing first ${dets.length}/${beforeRemainingLimit} remaining item(s) after checkpoint filtering.`);
+    }
+
     if (!prefetchOnly && getAuthMode() === 'auto') {
       await initprox();
       await tim(2000);
@@ -778,9 +785,13 @@ async function start() {
     
     const timingConfig = getTimingConfig();
     const concurrency = USE_PROXIES ? getParserConcurrency() : 1;
+    const launchIntervalMs = USE_PROXIES ? Math.max(0, parseInt(process.env.PARSER_LAUNCH_INTERVAL_MS || '0', 10)) : 0;
     console.log(`\n==================================================`);
     console.log(`Starting parallel parsing of ${total} details...`);
     console.log(`Concurrency limit: ${concurrency} parallel workers (optimized for ${USE_PROXIES ? 'proxy-rotation' : 'direct-mode'})`);
+    if (launchIntervalMs > 0) {
+      console.log(`Launch interval: ${launchIntervalMs}ms between new item workers`);
+    }
     console.log(`==================================================\n`);
     
     const pool = [];
@@ -850,6 +861,10 @@ async function start() {
       pool.push(workerPromise);
       activeWorkers.add(workerPromise);
       workerPromise.then(() => activeWorkers.delete(workerPromise));
+
+      if (launchIntervalMs > 0 && i < dets.length - 1) {
+        await tim(launchIntervalMs);
+      }
       
       if (activeWorkers.size >= concurrency) {
         await Promise.race(activeWorkers);

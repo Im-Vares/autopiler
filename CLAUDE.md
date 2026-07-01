@@ -15,7 +15,7 @@ Russian sources, file names, and identifiers (Марка, Номер, etc.) are 
 ```bash
 npm test                            # node:test runner against tests/e2e.test.js
 node -c prox.js && node -c ax.js && node -c index.js && node -c pupp.js && node -c files.js  # syntax check
-node index.js                       # start Express control plane on :8081
+node index.js                       # start Express control plane on :18081 by default
 node index.js --direct              # one-shot scrape, no HTTP server
 node index.js --diagnostics         # production-readiness check, exits 0/1 without scraping
 node --test tests/e2e.test.js --test-name-pattern="Feature 1"   # run a single suite
