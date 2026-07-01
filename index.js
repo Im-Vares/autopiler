@@ -827,7 +827,7 @@ async function start() {
             main.push(offer);
           }
         } else if (!result.success) {
-          if (result.reason === 'error') {
+          if (result.reason === 'error' || result.reason === 'retryable_error') {
             metrics.parser_errors_total++;
             errored.push({ item: result.item, id: result.id, index });
           }

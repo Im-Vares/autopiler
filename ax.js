@@ -42,6 +42,15 @@ function normalizeArticle(value) {
 }
 
 const maxRetries = Math.max(1, Math.min(3, parseInt(process.env.MAX_REQUEST_RETRIES || '3', 10)));
+const PROXY_LEASE_TIMEOUT_MS = Math.max(1000, parseInt(process.env.PROXY_LEASE_TIMEOUT_MS || '120000', 10));
+const PROXY_POOL_RECOVERY_MAX_MS = Math.max(
+  PROXY_LEASE_TIMEOUT_MS,
+  parseInt(process.env.PROXY_POOL_RECOVERY_MAX_MS || String(35 * 60 * 1000), 10)
+);
+const PROXY_POOL_RECOVERY_BACKOFF_MS = Math.max(
+  1000,
+  parseInt(process.env.PROXY_POOL_RECOVERY_BACKOFF_MS || String(60 * 1000), 10)
+);
 const CATALOG_CACHE_FILE = process.env.CATALOG_CACHE_FILE
   ? path.resolve(process.env.CATALOG_CACHE_FILE)
   : path.join(__dirname, 'catalog_id_cache.json');
@@ -729,7 +738,10 @@ async function get(url, forceProxy = null, referer = 'https://autopiter.ru/') {
     updateDirectCookie
   } = require('./prox.js');
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+  const requestStartedAt = Date.now();
+  let proxyPoolWaits = 0;
+  let attempt = 1;
+  while (attempt <= maxRetries) {
     let lease = null;
     let releaseRequestSlot = null;
     let proxy = null;
@@ -747,7 +759,7 @@ async function get(url, forceProxy = null, referer = 'https://autopiter.ru/') {
         forcedDirect = true;
         ua.Cookie = getDirectCookie();
       } else {
-        lease = await acquireProxyLease({ timeoutMs: 120000 });
+        lease = await acquireProxyLease({ timeoutMs: PROXY_LEASE_TIMEOUT_MS });
         proxy = lease.proxy;
         ua = lease.ua;
       }
@@ -839,7 +851,18 @@ async function get(url, forceProxy = null, referer = 'https://autopiter.ru/') {
       const status = error.response && error.response.status;
       const label = proxy ? `${proxy.host}:${proxy.port}` : (error.code === 'PROXY_LEASE_TIMEOUT' ? 'proxy-pool' : 'direct');
       console.log(`[get] Attempt ${attempt}/${maxRetries} failed via ${label}: ${error.message}`);
-      if (proxy && (status === 429 || status === 403)) {
+      if (error.code === 'PROXY_LEASE_TIMEOUT' && !forcedDirect && !forcedProxy) {
+        const waitedMs = Date.now() - requestStartedAt;
+        if (waitedMs < PROXY_POOL_RECOVERY_MAX_MS) {
+          proxyPoolWaits++;
+          const remainingMs = PROXY_POOL_RECOVERY_MAX_MS - waitedMs;
+          const baseDelayMs = Math.min(PROXY_POOL_RECOVERY_BACKOFF_MS, remainingMs);
+          const delayMs = Math.max(1000, Math.round(baseDelayMs * (0.75 + Math.random() * 0.5)));
+          console.log(`[get] Proxy pool unavailable; waiting ${Math.round(delayMs / 1000)}s before retrying the same request attempt (pool wait #${proxyPoolWaits}).`);
+          await tim(delayMs);
+          continue;
+        }
+      } else if (proxy && (status === 429 || status === 403)) {
         outcome = 'rate_limited';
         if (!lease) markProxyBad(proxy, 'rate_limited');
         wrapper.rp = null;
@@ -866,6 +889,7 @@ async function get(url, forceProxy = null, referer = 'https://autopiter.ru/') {
       if (releaseRequestSlot) releaseRequestSlot(outcome, options);
       if (lease) lease.release(outcome);
     }
+    attempt++;
   }
   console.log(`[get] Request failed after ${maxRetries} classified attempts: ${url}`);
   return null;
